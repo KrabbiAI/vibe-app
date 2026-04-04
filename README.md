@@ -1,73 +1,124 @@
-# React + TypeScript + Vite
+# 🎵 VIBE — Musik ohne Noten
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Mood-based music creation. Keine Akkorde, kein BPM — nur Farben und Gefühl.
 
-Currently, two official plugins are available:
+**Live:** https://candid-begonia-1e5b20.netlify.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ✨ Features
 
-## React Compiler
+- 🎛 **6 Moods** — Warm, Electric, Dreamy, Dark, Forest, Fire (jedes mit eigenem Farbschema)
+- 🥁 **6 Sound-Pads** — KICK, SNARE, BASS, CHORD, LEAD, FX (toggle an/aus)
+- 🎚 **Energie-Slider** — 😴 Chill (60 BPM) bis 🤯 Banger (160 BPM)
+- ▶️ **PLAY/STOP** — 8-Step Beat-Visualizer
+- 🎲 **REMIX** — alles zufällig neu mischen
+- Ripple-Effekte, Ambient Glow, Puls-Animationen
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠 Tech Stack
 
-## Expanding the ESLint configuration
+| Layer | Tech |
+|-------|------|
+| Framework | React 19 + Vite (TypeScript) |
+| Audio | Tone.js (noch nicht aktiv — MVP visuell) |
+| Animation | Framer Motion |
+| State | Zustand |
+| Styling | Inline Styles (CSS Custom Properties) |
+| Tests | Vitest + Testing Library |
+| Hosting | Netlify (auto-deploy on push) |
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🚀 Setup
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+```bash
+# Clone
+git clone https://github.com/KrabbiAI/vibe-app.git
+cd vibe-app
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+# Install dependencies
+npm install
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Install additional deps (Tone.js, Framer Motion, Zustand, Vitest)
+npm install tone framer-motion zustand
+npm install -D vitest @testing-library/react @testing-library/user-event @testing-library/jest-dom jsdom
+
+# Run tests
+npm test
+
+# Run dev server
+npm run dev
+
+# Build for production
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🧪 Tests
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm test        # Run all tests (15 tests)
+npm run test:watch  # Watch mode
 ```
+
+**Test Coverage:**
+- Mood button rendering (all 6)
+- Pad rendering (all 6)
+- Energy slider → BPM conversion
+- Play/Stop toggle
+- Beat visualizer
+- Remix button
+- Status bar updates
+
+## 🌐 Deployment
+
+**Auto-Deploy (Netlify):**
+Push to `main` → Netlify baut und deployt automatisch.
+
+**Manual:**
+```bash
+npm run build
+netlify deploy --prod --dir=dist
+```
+
+## 📁 Project Structure
+
+```
+vibe-app/
+├── src/
+│   ├── App.tsx          # Main component (all UI)
+│   ├── App.css         # Minimal reset
+│   ├── App.test.tsx    # Vitest tests
+│   ├── setupTests.ts   # Testing Library setup
+│   ├── main.tsx        # Entry point
+│   └── index.css       # Global styles
+├── public/             # Static assets
+├── vite.config.ts      # Vite config
+├── vitest.config.ts    # Test config
+├── package.json
+└── tsconfig.json
+```
+
+## 🎛 Moods & Colors
+
+| Mood | Color | Vibe |
+|------|-------|------|
+| ☀️ Warm | `#FFB347` | Sommer, Euphorie |
+| ⚡ Electric | `#7DF9FF` | Energie, Club |
+| 🌙 Dreamy | `#B39DDB` | Tief, Träumerisch |
+| 🌑 Dark | `#2D2D3A` | Intensiv, Drama |
+| 🌿 Forest | `#52B788` | Entspannt, Natur |
+| 🔥 Fire | `#FF4500` | Wut, Power |
+
+## ⚠️ Known Limitations
+
+- Tone.js ist installiert aber noch nicht im Code aktiviert — Audio-Engine kommt als nächstes Feature
+- URL State für Share-Funktion ist noch nicht implementiert
+- Mobile Touch-Events können bei Sound-Pads verzögern (geplant: Touch-optimierte Pads)
+
+## 🔮 Next Steps
+
+1. Tone.js Audio-Engine integrieren (echte Synth-Sounds pro Mood)
+2. Sound-Pads mit echtem Audio-Trigger
+3. URL-enconded State für Share-Links
+4. Aufnahme-Funktion (导出 als WAV/MP3)
+5. Mobile-optimierte Touch-Gesten
+
+---
+
+*Built by Krabbi 🦀 — React + Vite + Framer Motion + Tone.js*
