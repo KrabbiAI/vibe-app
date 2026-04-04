@@ -271,7 +271,7 @@ export default function App() {
             <div style={{ fontSize: 11, letterSpacing: 4, opacity: 0.5 }}>ENERGIE</div>
             <div style={{ fontSize: 16, fontWeight: "bold" }} data-testid="energy-label">{getEnergyLabel(energy)}</div>
           </div>
-          <div style={{ position: "relative", height: 24, display: "flex", alignItems: "center" }}>
+          <div style={{ position: "relative", minHeight: 48, display: "flex", alignItems: "center", touchAction: "none" }}>
             <div
               data-testid="energy-track"
               onClick={(e) => {
@@ -294,15 +294,29 @@ export default function App() {
                 document.addEventListener("mousemove", onMove)
                 document.addEventListener("mouseup", onUp)
               }}
+              onTouchStart={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                const touch = e.touches[0]
+                const pct = Math.max(0, Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100))
+                setEnergy(Math.round(pct))
+              }}
+              onTouchMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                const touch = e.touches[0]
+                const pct = Math.max(0, Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100))
+                setEnergy(Math.round(pct))
+              }}
               style={{
                 position: "absolute",
                 left: 0,
                 right: 0,
-                height: 8,
-                borderRadius: 4,
+                height: 48,
+                borderRadius: 24,
                 background: "rgba(255,255,255,0.1)",
                 cursor: "pointer",
                 overflow: "hidden",
+                display: "flex",
+                alignItems: "center",
               }}
             >
               <div
@@ -311,9 +325,9 @@ export default function App() {
                   height: "100%",
                   width: `${energy}%`,
                   background: `linear-gradient(90deg, ${accent}88, ${accent})`,
-                  borderRadius: 4,
+                  borderRadius: 24,
                   transition: "width 0.05s ease",
-                  boxShadow: `0 0 12px ${accent}`,
+                  boxShadow: `0 0 16px ${accent}`,
                   pointerEvents: "none",
                 }}
               />
