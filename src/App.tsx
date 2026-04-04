@@ -271,13 +271,37 @@ export default function App() {
             <div style={{ fontSize: 11, letterSpacing: 4, opacity: 0.5 }}>ENERGIE</div>
             <div style={{ fontSize: 16, fontWeight: "bold" }} data-testid="energy-label">{getEnergyLabel(energy)}</div>
           </div>
-          <div style={{ position: "relative" }}>
+          <div style={{ position: "relative", height: 24, display: "flex", alignItems: "center" }}>
             <div
+              data-testid="energy-track"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100))
+                setEnergy(Math.round(pct))
+              }}
+              onMouseDown={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100))
+                setEnergy(Math.round(pct))
+                const onMove = (ev: MouseEvent) => {
+                  const p = Math.max(0, Math.min(100, ((ev.clientX - rect.left) / rect.width) * 100))
+                  setEnergy(Math.round(p))
+                }
+                const onUp = () => {
+                  document.removeEventListener("mousemove", onMove)
+                  document.removeEventListener("mouseup", onUp)
+                }
+                document.addEventListener("mousemove", onMove)
+                document.addEventListener("mouseup", onUp)
+              }}
               style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
                 height: 8,
                 borderRadius: 4,
                 background: "rgba(255,255,255,0.1)",
-                position: "relative",
+                cursor: "pointer",
                 overflow: "hidden",
               }}
             >
@@ -288,29 +312,12 @@ export default function App() {
                   width: `${energy}%`,
                   background: `linear-gradient(90deg, ${accent}88, ${accent})`,
                   borderRadius: 4,
-                  transition: "width 0.1s ease",
+                  transition: "width 0.05s ease",
                   boxShadow: `0 0 12px ${accent}`,
+                  pointerEvents: "none",
                 }}
               />
             </div>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={energy}
-              onChange={(e) => setEnergy(Number(e.target.value))}
-              data-testid="energy-slider"
-              style={{
-                position: "absolute",
-                top: -4,
-                left: 0,
-                right: 0,
-                width: "100%",
-                opacity: 0,
-                cursor: "pointer",
-                height: 16,
-              }}
-            />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 10, opacity: 0.4, letterSpacing: 2 }}>
             <span>AMBIENT</span>
