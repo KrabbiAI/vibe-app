@@ -26,7 +26,7 @@ type PadId = 0 | 1 | 2 | 3 | 4 | 5
 
 interface PadConfig {
   name: string
-  synthType: "membrane" | "noise" | "amSynth" | "fmSynth" | "metal" | "noise"
+  synthType: string
   note: string
   duration: Tone.Unit.Time
   filterFreq: number
@@ -34,12 +34,12 @@ interface PadConfig {
 }
 
 const PAD_CONFIGS: Record<number, PadConfig> = {
-  0: { name: "KICK",  synthType: "membrane", note: "C1", duration: "8n",  filterFreq: 500,  color: "#FF6B6B" },
-  1: { name: "SNARE", synthType: "noise",     note: "C3", duration: "8n",  filterFreq: 3000, color: "#FFD93D" },
-  2: { name: "BASS",  synthType: "amSynth",   note: "C2", duration: "4n",  filterFreq: 800,  color: "#6BCB77" },
-  3: { name: "CHORD", synthType: "fmSynth",   note: "C3", duration: "2n",  filterFreq: 2000, color: "#4D96FF" },
-  4: { name: "LEAD",  synthType: "amSynth",   note: "C4", duration: "4n",  filterFreq: 3000, color: "#C77DFF" },
-  5: { name: "FX",    synthType: "metal",     note: "C5", duration: "2n",  filterFreq: 5000, color: "#FF9A3C" },
+  0: { name: "KICK",  synthType: "membrane", note: "C1", duration: "8n",  filterFreq: 200,  color: "#FF6B6B" },
+  1: { name: "SNARE", synthType: "noise",     note: "C3", duration: "8n",  filterFreq: 4000, color: "#FFD93D" },
+  2: { name: "BASS",  synthType: "monoSynth", note: "C2", duration: "4n",  filterFreq: 800,  color: "#6BCB77" },
+  3: { name: "CHORD", synthType: "polySynth",  note: "C3", duration: "2n",  filterFreq: 3000, color: "#4D96FF" },
+  4: { name: "LEAD",  synthType: "leadSynth",  note: "C4", duration: "4n",  filterFreq: 4000, color: "#C77DFF" },
+  5: { name: "FX",    synthType: "fxSynth",     note: "C5", duration: "2n",  filterFreq: 6000, color: "#FF9A3C" },
 }
 
 // Step patterns per mood (which beat steps each pad fires on)
@@ -68,7 +68,7 @@ export function createAudioEngine(
 ): VibeAudioEngine {
   const engineRef = { current: {
     isStarted: false,
-    synths: {} as Record<number, Tone.Synth | Tone.MembraneSynth | Tone.NoiseSynth | Tone.MetalSynth | Tone.FMSynth | Tone.AMSynth>,
+    synths: {} as Record<number, any>,
     chordSynth: null as Tone.PolySynth | null,
     filter: null as Tone.Filter | null,
     reverb: null as Tone.Reverb | null,
@@ -92,54 +92,109 @@ export function createAudioEngine(
     return [`${base}3`, third, fifth]
   }
 
-  const createPadSynth = (padId: number, mood: string): Tone.Synth | Tone.MembraneSynth | Tone.NoiseSynth | Tone.MetalSynth | Tone.FMSynth | Tone.AMSynth => {
+  const createPadSynth = (padId: number, mood: string): Tone.Synth | Tone.MembraneSynth | Tone.NoiseSynth | Tone.MetalSynth | Tone.FMSynth | Tone.AMSynth | Tone.MonoSynth | Tone.PolySynth | Tone.Sampler => {
     const config = PAD_CONFIGS[padId]
     const moodConfig = MOOD_SYNTH_CONFIG[mood]
 
     if (config.synthType === "membrane") {
+      // KICK: punchy sub-bass with pitch sweep from ~150Hz → 40Hz
       return new Tone.MembraneSynth({
-        pitchDecay: 0.05,
-        octaves: 4,
-        envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 0.4 },
+        pitchDecay: 0.08,
+        octaves: 6,
+        resonantHarmonics: false,
+        envelope: {
+          attack: 0.001,
+          decay: 0.25,
+          sustain: 0.01,
+          release: 0.1,
+        },
       } as any)
     }
 
     if (config.synthType === "noise") {
+      // SNARE: sharp attack, quick decay, tonal snap at the front
       return new Tone.NoiseSynth({
         noise: { type: "white" },
-        envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.2 },
+        envelope: {
+          attack: 0.001,
+          decay: 0.15,
+          sustain: 0,
+          release: 0.1,
+        },
       } as any)
     }
 
-    if (config.synthType === "metal") {
-      return new Tone.MetalSynth({
-        frequency: 200,
-        envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 0.2 },
-        harmonicity: 5.1,
-        modulationIndex: 12,
-        resonance: 4000,
-        octaves: 1.5,
+    if (config.synthType === "monoSynth") {
+      // BASS: monophonic, portamento, punchy filter envelope
+      return new Tone.MonoSynth({
+        oscillator: { type: "sawtooth" },
+        envelope: {
+          attack: 0.005,
+          decay: 0.2,
+          sustain: 0.4,
+          release: 0.2,
+        },
+        filterEnvelope: {
+          attack: 0.001,
+          decay: 0.1,
+          sustain: 0.3,
+          release: 0.2,
+          baseFrequency: 200,
+          octaves: 2.5,
+        },
+        filter: { type: "lowpass", rolloff: -24 },
       } as any)
     }
 
-    if (config.synthType === "fmSynth") {
+    if (config.synthType === "polySynth") {
+      // CHORD: lush, detuned, warm pad
+      return new Tone.PolySynth(Tone.AMSynth, {
+        harmonicity: 1.5,
+        oscillator: { type: "triangle" },
+        envelope: {
+          attack: 0.05,
+          decay: 0.4,
+          sustain: 0.6,
+          release: 0.8,
+        },
+      } as any)
+    }
+
+    if (config.synthType === "leadSynth") {
+      // LEAD: bright, penetrating, slightly detuned for width
       return new Tone.FMSynth({
-        harmonicity: 3,
-        modulationIndex: 10,
-        oscillator: { type: "sine" },
-        envelope: { attack: 0.01, decay: 0.3, sustain: 0.5, release: 0.8 },
+        harmonicity: 4,
+        modulationIndex: 6,
+        oscillator: { type: "square" },
+        envelope: {
+          attack: 0.005,
+          decay: 0.1,
+          sustain: 0.4,
+          release: 0.3,
+        },
+        modulationEnvelope: {
+          attack: 0.001,
+          decay: 0.1,
+          sustain: 0.2,
+          release: 0.2,
+        },
       } as any)
     }
 
-    if (config.synthType === "amSynth") {
-      return new Tone.AMSynth({
-        harmonicity: 2,
-        oscillator: { type: "sine" },
-        envelope: { attack: 0.01, decay: 0.3, sustain: 0.6, release: 0.8 },
+    if (config.synthType === "fxSynth") {
+      // FX: riser/impact - noise burst with pitch sweep
+      return new Tone.NoiseSynth({
+        noise: { type: "pink" },
+        envelope: {
+          attack: 0.01,
+          decay: 0.3,
+          sustain: 0.1,
+          release: 0.4,
+        },
       } as any)
     }
 
-    // Default: synth
+    // Fallback
     return new Tone.Synth({
       oscillator: { type: moodConfig.oscillator },
       envelope: moodConfig.envelope,
@@ -165,32 +220,23 @@ export function createAudioEngine(
 
     const reverb = new Tone.Reverb({
       decay: 1 + (energy / 100) * 3,
-      wet: 0.2 + (energy / 100) * 0.3,
+      wet: 0.15 + (energy / 100) * 0.25,
     })
 
     const distortion = new Tone.Distortion({
-      distortion: 0.1 + (1 - energy / 100) * 0.3,
+      distortion: 0.05 + (1 - energy / 100) * 0.2,
     })
 
     await reverb.generate()
 
-    // Create chord synth for pads 3 and 4 (CHORD and LEAD)
-    const chordSynth = new Tone.PolySynth(Tone.AMSynth, {
-      harmonicity: 2,
-      oscillator: { type: "sine" },
-      envelope: { attack: 0.02, decay: 0.4, sustain: 0.6, release: 1.0 },
-    })
-    chordSynth.chain(distortion, filter, reverb, Tone.getDestination())
-
-    // Create pad synths
-    const synths: Record<number, Tone.Synth | Tone.MembraneSynth | Tone.NoiseSynth | Tone.MetalSynth | Tone.FMSynth | Tone.AMSynth> = {}
+    // Create pad synths - each with its own chain for better sound control
+    const synths: Record<number, any> = {}
     ;[0, 1, 2, 3, 4, 5].forEach(padId => {
       const synth = createPadSynth(padId as PadId, mood)
       synth.chain(distortion, filter, reverb, Tone.getDestination())
       synths[padId] = synth
     })
 
-    r.chordSynth = chordSynth
     r.synths = synths
     r.filter = filter
     r.reverb = reverb
@@ -208,29 +254,31 @@ export function createAudioEngine(
         onBeatStep(step)
         const pattern = STEP_PATTERNS[mood] || STEP_PATTERNS.sunny
         r.activePads.forEach(padId => {
-          const steps = pattern[padId] || []
-          if (steps.includes(step)) {
+          const hitSteps = pattern[padId] || []
+          if (hitSteps.includes(step)) {
             const config = PAD_CONFIGS[padId]
             const effectiveMood = r.currentMood
             const chordNotes = getChordNotes(effectiveMood, step)
             onPadPulse(padId)
 
-            if (padId === 3 || padId === 4) {
-              // Chord pads use chord synth
-              r.chordSynth?.triggerAttackRelease(chordNotes, config.duration, time)
+            if (padId === 3) {
+              // CHORD: trigger chord notes on polySynth
+              r.synths[3]?.triggerAttackRelease(chordNotes, config.duration, time)
+            } else if (padId === 4) {
+              // LEAD: single note melody using leadSynth
+              r.synths[4]?.triggerAttackRelease(config.note, config.duration, time)
             } else if (padId === 1) {
-              // Noise for snare
-              ;(r.synths[1] as Tone.NoiseSynth).triggerAttackRelease("8n", time)
+              // SNARE: noise burst
+              r.synths[1]?.triggerAttackRelease("8n", time)
             } else if (padId === 5) {
-              // FX uses metal synth
-              ;(r.synths[5] as Tone.MetalSynth).triggerAttackRelease(config.note, "16n", time)
+              // FX: pink noise riser
+              r.synths[5]?.triggerAttackRelease("8n", time)
             } else if (padId === 0) {
-              // Kick
-              ;(r.synths[0] as Tone.MembraneSynth).triggerAttackRelease(config.note, config.duration, time)
+              // KICK: sub bass with pitch sweep
+              r.synths[0]?.triggerAttackRelease(config.note, config.duration, time)
             } else {
-              // Bass / default synth
-              const synth = r.synths[padId] as Tone.Synth
-              synth.triggerAttackRelease(config.note, config.duration, time)
+              // BASS: mono synth
+              r.synths[padId]?.triggerAttackRelease(config.note, config.duration, time)
             }
           }
         })
@@ -260,17 +308,19 @@ export function createAudioEngine(
       if (!r.isStarted) return
       const config = PAD_CONFIGS[id]
       onPadPulse(id)
-      if (id === 3 || id === 4) {
+      if (id === 3) {
         const chordNotes = getChordNotes(r.currentMood, 0)
-        r.chordSynth?.triggerAttackRelease(chordNotes, config.duration)
+        r.synths[3]?.triggerAttackRelease(chordNotes, config.duration)
+      } else if (id === 4) {
+        r.synths[4]?.triggerAttackRelease(config.note, config.duration)
       } else if (id === 1) {
-        ;(r.synths[1] as Tone.NoiseSynth).triggerAttackRelease("8n")
+        r.synths[1]?.triggerAttackRelease("8n")
       } else if (id === 5) {
-        ;(r.synths[5] as Tone.MetalSynth).triggerAttackRelease(config.note, "16n")
+        r.synths[5]?.triggerAttackRelease("8n")
       } else if (id === 0) {
-        ;(r.synths[0] as Tone.MembraneSynth).triggerAttackRelease(config.note, config.duration)
+        r.synths[0]?.triggerAttackRelease(config.note, config.duration)
       } else {
-        ;(r.synths[id] as Tone.Synth).triggerAttackRelease(config.note, config.duration)
+        r.synths[id]?.triggerAttackRelease(config.note, config.duration)
       }
     },
     setMood: async (mood: string) => {
