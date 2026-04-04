@@ -6,23 +6,24 @@ Mood-based music creation. Keine Akkorde, kein BPM — nur Farben und Gefühl.
 
 ## ✨ Features
 
-- 🎛 **6 Moods** — Warm, Electric, Dreamy, Dark, Forest, Fire (jedes mit eigenem Farbschema)
-- 🥁 **6 Sound-Pads** — KICK, SNARE, BASS, CHORD, LEAD, FX (toggle an/aus)
-- 🎚 **Energie-Slider** — 😴 Chill (60 BPM) bis 🤯 Banger (160 BPM)
-- ▶️ **PLAY/STOP** — 8-Step Beat-Visualizer
+- 🎛 **6 Moods** — Warm, Electric, Dreamy, Dark, Forest, Fire (jedes mit eigenem Farbschema + Akkord-Progression)
+- 🥁 **6 Sound-Pads** — KICK, SNARE, BASS, CHORD, LEAD, FX (toggle an/aus) — **echte Tone.js Synths**
+- 🎚 **Energie-Slider** — 😴 Chill (60 BPM) bis 🤯 Banger (160 BPM) — steuert auch Filter + Reverb
+- ▶️ **PLAY/STOP** — 8-Step Beat-Visualizer mit echtem Sequencer
 - 🎲 **REMIX** — alles zufällig neu mischen
 - Ripple-Effekte, Ambient Glow, Puls-Animationen
+- **Echter Sound** — MembraneSynth (Kick), NoiseSynth (Snare), FMSynth/AMSynth (Chord/Lead/Bass), MetalSynth (FX)
 
 ## 🛠 Tech Stack
 
 | Layer | Tech |
 |-------|------|
 | Framework | React 19 + Vite (TypeScript) |
-| Audio | Tone.js (noch nicht aktiv — MVP visuell) |
+| Audio | Tone.js v15 (MembraneSynth, NoiseSynth, FMSynth, AMSynth, MetalSynth) |
 | Animation | Framer Motion |
 | State | Zustand |
-| Styling | Inline Styles (CSS Custom Properties) |
-| Tests | Vitest + Testing Library |
+| Styling | Inline Styles |
+| Tests | Vitest + Testing Library (11 tests) |
 | Hosting | Netlify (auto-deploy on push) |
 
 ## 🚀 Setup
@@ -107,17 +108,15 @@ vibe-app/
 
 ## ⚠️ Known Limitations
 
-- Tone.js ist installiert aber noch nicht im Code aktiviert — Audio-Engine kommt als nächstes Feature
 - URL State für Share-Funktion ist noch nicht implementiert
 - Mobile Touch-Events können bei Sound-Pads verzögern (geplant: Touch-optimierte Pads)
 
 ## 🔮 Next Steps
 
-1. Tone.js Audio-Engine integrieren (echte Synth-Sounds pro Mood)
-2. Sound-Pads mit echtem Audio-Trigger
-3. URL-enconded State für Share-Links
-4. Aufnahme-Funktion (导出 als WAV/MP3)
-5. Mobile-optimierte Touch-Gesten
+1. ~~Tone.js Audio-Engine integrieren~~ ✅ done
+2. URL-encoded State für Share-Links
+3. Aufnahme-Funktion (导出 als WAV/MP3)
+4. Mobile-optimierte Touch-Gesten
 
 ---
 
