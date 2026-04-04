@@ -1,119 +1,136 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import "./App.css";
+import { useState, useEffect, useRef, useCallback } from "react"
+import "./App.css"
+import type { VibeAudioEngine } from "./useAudioEngine"
+import { createAudioEngine } from "./useAudioEngine"
 
 const MOODS = [
-  { id: "sunny", label: "☀️ Warm", color: "#FFB347", textColor: "#2D1B00", desc: "Sommer, Euphorie", angle: 0 },
-  { id: "electric", label: "⚡ Electric", color: "#7DF9FF", textColor: "#001A2C", desc: "Energie, Club", angle: 60 },
-  { id: "dreamy", label: "🌙 Dreamy", color: "#B39DDB", textColor: "#0D0020", desc: "Tief, Träumerisch", angle: 120 },
-  { id: "dark", label: "🌑 Dark", color: "#2D2D3A", textColor: "#E0E0FF", desc: "Intensiv, Drama", angle: 180 },
-  { id: "forest", label: "🌿 Forest", color: "#52B788", textColor: "#001A10", desc: "Entspannt, Natur", angle: 240 },
-  { id: "fire", label: "🔥 Fire", color: "#FF4500", textColor: "#FFF0E6", desc: "Wut, Power", angle: 300 },
-];
+  { id: "sunny",   label: "☀️ Warm",    color: "#FFB347", textColor: "#2D1B00", desc: "Sommer, Euphorie",     angle: 0   },
+  { id: "electric", label: "⚡ Electric", color: "#7DF9FF", textColor: "#001A2C", desc: "Energie, Club",       angle: 60  },
+  { id: "dreamy",  label: "🌙 Dreamy",   color: "#B39DDB", textColor: "#0D0020", desc: "Tief, Träumerisch",   angle: 120 },
+  { id: "dark",    label: "🌑 Dark",     color: "#2D2D3A", textColor: "#E0E0FF", desc: "Intensiv, Drama",     angle: 180 },
+  { id: "forest",  label: "🌿 Forest",   color: "#52B788", textColor: "#001A10", desc: "Entspannt, Natur",     angle: 240 },
+  { id: "fire",    label: "🔥 Fire",     color: "#FF4500", textColor: "#FFF0E6", desc: "Wut, Power",           angle: 300 },
+]
 
 const PADS = [
-  { id: 0, label: "KICK", icon: "●", baseColor: "#FF6B6B" },
+  { id: 0, label: "KICK",  icon: "●", baseColor: "#FF6B6B" },
   { id: 1, label: "SNARE", icon: "◆", baseColor: "#FFD93D" },
-  { id: 2, label: "BASS", icon: "▼", baseColor: "#6BCB77" },
+  { id: 2, label: "BASS",  icon: "▼", baseColor: "#6BCB77" },
   { id: 3, label: "CHORD", icon: "■", baseColor: "#4D96FF" },
-  { id: 4, label: "LEAD", icon: "★", baseColor: "#C77DFF" },
-  { id: 5, label: "FX", icon: "◉", baseColor: "#FF9A3C" },
-];
+  { id: 4, label: "LEAD",  icon: "★", baseColor: "#C77DFF" },
+  { id: 5, label: "FX",    icon: "◉", baseColor: "#FF9A3C" },
+]
 
 const BG_MAP: Record<string, string> = {
-  sunny: "radial-gradient(ellipse at 30% 20%, #FFD700 0%, #FF8C00 40%, #1a0a00 100%)",
+  sunny:   "radial-gradient(ellipse at 30% 20%, #FFD700 0%, #FF8C00 40%, #1a0a00 100%)",
   electric: "radial-gradient(ellipse at 70% 30%, #00FFFF 0%, #0080FF 40%, #000820 100%)",
-  dreamy: "radial-gradient(ellipse at 50% 10%, #E040FB 0%, #5C35CC 40%, #0a001a 100%)",
-  dark: "radial-gradient(ellipse at 20% 80%, #3D1A78 0%, #0D0D1A 60%, #000000 100%)",
-  forest: "radial-gradient(ellipse at 60% 20%, #00FF88 0%, #007744 40%, #001108 100%)",
-  fire: "radial-gradient(ellipse at 40% 10%, #FFD700 0%, #FF2200 40%, #1A0000 100%)",
-};
-
-const ACCENT_MAP: Record<string, string> = {
-  sunny: "#FFD700",
-  electric: "#00FFFF",
-  dreamy: "#E040FB",
-  dark: "#7B61FF",
-  forest: "#00FF88",
-  fire: "#FF4500",
-};
-
-function getEnergyLabel(energy: number): string {
-  if (energy < 25) return "😴 Chill";
-  if (energy < 50) return "😌 Flow";
-  if (energy < 75) return "🙂 Vibe";
-  return "🤯 Banger";
+  dreamy:  "radial-gradient(ellipse at 50% 10%, #E040FB 0%, #5C35CC 40%, #0a001a 100%)",
+  dark:    "radial-gradient(ellipse at 20% 80%, #3D1A78 0%, #0D0D1A 60%, #000000 100%)",
+  forest:  "radial-gradient(ellipse at 60% 20%, #00FF88 0%, #007744 40%, #001108 100%)",
+  fire:    "radial-gradient(ellipse at 40% 10%, #FFD700 0%, #FF2200 40%, #1A0000 100%)",
 }
 
-function bpmFromEnergy(energy: number): number {
-  return Math.round(60 + (energy / 100) * 100);
+const ACCENT_MAP: Record<string, string> = {
+  sunny:   "#FFD700",
+  electric: "#00FFFF",
+  dreamy:  "#E040FB",
+  dark:    "#7B61FF",
+  forest:  "#00FF88",
+  fire:    "#FF4500",
+}
+
+function getEnergyLabel(energy: number): string {
+  if (energy < 25) return "😴 Chill"
+  if (energy < 50) return "😌 Flow"
+  if (energy < 75) return "🙂 Vibe"
+  return "🤯 Banger"
 }
 
 export default function App() {
-  const [activeMood, setActiveMood] = useState("sunny");
-  const [energy, setEnergy] = useState(50);
-  const [activePads, setActivePads] = useState<Set<number>>(new Set([0, 2, 3]));
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [beatStep, setBeatStep] = useState(-1);
-  const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
-  const [padPulse, setPadPulse] = useState<Set<number>>(new Set());
+  const [activeMood, setActiveMood] = useState("sunny")
+  const [energy, setEnergy] = useState(50)
+  const [activePads, setActivePads] = useState<Set<number>>(new Set([0, 2, 3]))
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [beatStep, setBeatStep] = useState(-1)
+  const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([])
+  const [padPulse, setPadPulse] = useState<Set<number>>(new Set())
+  const [audioStarted, setAudioStarted] = useState(false)
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const rippleIdRef = useRef(0);
+  const engineRef = useRef<VibeAudioEngine | null>(null)
+  const rippleIdRef = useRef(0)
 
-  const accent = ACCENT_MAP[activeMood];
-  const currentMood = MOODS.find((m) => m.id === activeMood)!;
-  const bpm = bpmFromEnergy(energy);
+  const accent = ACCENT_MAP[activeMood]
+  const currentMood = MOODS.find((m) => m.id === activeMood)!
+  const bpm = Math.round(60 + (energy / 100) * 100)
+
+  // Create audio engine once
+  useEffect(() => {
+    const handleBeatStep = (step: number) => setBeatStep(step)
+    const handlePadPulse = (padId: number) => {
+      setPadPulse(new Set([padId]))
+      setTimeout(() => setPadPulse(new Set()), 80)
+    }
+    engineRef.current = createAudioEngine(handleBeatStep, handlePadPulse)
+    return () => { engineRef.current = null }
+  }, [])
+
+  // Sync active pads to engine
+  useEffect(() => {
+    engineRef.current?.setActivePads(activePads)
+  }, [activePads])
+
+  // Sync energy to engine
+  useEffect(() => {
+    engineRef.current?.setEnergy(energy)
+  }, [energy])
+
+  // Sync mood to engine
+  useEffect(() => {
+    engineRef.current?.setMood(activeMood)
+  }, [activeMood])
 
   const togglePad = useCallback((id: number) => {
+    // Trigger immediately for audio feedback
+    engineRef.current?.triggerPad(id)
     setActivePads((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }, []);
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }, [])
 
   const handleMoodClick = useCallback((id: string, e: React.MouseEvent) => {
-    setActiveMood(id);
-    const rect = e.currentTarget.getBoundingClientRect();
-    const newId = rippleIdRef.current++;
-    setRipples((r) => [...r, { id: newId, x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }]);
-    setTimeout(() => setRipples((r) => r.filter((rp) => rp.id !== newId)), 1000);
-  }, []);
+    setActiveMood(id)
+    const rect = e.currentTarget.getBoundingClientRect()
+    const newId = rippleIdRef.current++
+    setRipples((r) => [...r, { id: newId, x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }])
+    setTimeout(() => setRipples((r) => r.filter((rp) => rp.id !== newId)), 1000)
+  }, [])
+
+  const handlePlay = useCallback(async () => {
+    if (!isPlaying) {
+      // Start audio engine on first play (requires user gesture)
+      if (!audioStarted) {
+        await engineRef.current?.start()
+        setAudioStarted(true)
+      } else {
+        engineRef.current?.start()
+      }
+      setIsPlaying(true)
+    } else {
+      engineRef.current?.stop()
+      setIsPlaying(false)
+      setBeatStep(-1)
+    }
+  }, [isPlaying, audioStarted])
 
   const handleRemix = useCallback(() => {
-    const pads = new Set([0, 1, 2, 3, 4, 5].filter(() => Math.random() > 0.4));
-    setActivePads(pads.size ? pads : new Set([0, 2, 3]));
-    setEnergy(Math.round(Math.random() * 100));
-    const moodIds = MOODS.map((m) => m.id);
-    setActiveMood(moodIds[Math.floor(Math.random() * moodIds.length)]);
-  }, []);
-
-  // Beat sequencer
-  useEffect(() => {
-    if (isPlaying) {
-      const interval = Math.round(60000 / bpm / 2);
-      let step = 0;
-      intervalRef.current = setInterval(() => {
-        setBeatStep(step % 8);
-        const triggered = new Set<number>();
-        if (activePads.has(0) && step % 2 === 0) triggered.add(0);
-        if (activePads.has(1) && step % 4 === 2) triggered.add(1);
-        if (activePads.has(2) && step % 4 === 0) triggered.add(2);
-        if (activePads.has(3) && step % 8 === 0) triggered.add(3);
-        if (activePads.has(4) && step % 8 === 4) triggered.add(4);
-        if (activePads.has(5) && step % 16 === 0) triggered.add(5);
-        setPadPulse(triggered);
-        setTimeout(() => setPadPulse(new Set()), 80);
-        step++;
-      }, interval);
-    } else {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      setBeatStep(-1);
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [isPlaying, bpm, activePads]);
+    const pads = new Set([0, 1, 2, 3, 4, 5].filter(() => Math.random() > 0.4))
+    setActivePads(pads.size ? pads : new Set([0, 2, 3]))
+    setEnergy(Math.round(Math.random() * 100))
+    const moodIds = MOODS.map((m) => m.id)
+    setActiveMood(moodIds[Math.floor(Math.random() * moodIds.length)])
+  }, [])
 
   return (
     <div
@@ -216,10 +233,7 @@ export default function App() {
                 data-testid={`mood-${mood.id}`}
                 data-active={activeMood === mood.id ? "true" : "false"}
                 style={{
-                  background:
-                    activeMood === mood.id
-                      ? `${mood.color}EE`
-                      : `${mood.color}22`,
+                  background: activeMood === mood.id ? `${mood.color}EE` : `${mood.color}22`,
                   border: `2px solid ${activeMood === mood.id ? mood.color : mood.color + "44"}`,
                   borderRadius: 16,
                   padding: "14px 8px",
@@ -309,8 +323,8 @@ export default function App() {
           <div style={{ fontSize: 11, letterSpacing: 4, opacity: 0.5, marginBottom: 14 }}>SOUNDS</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
             {PADS.map((pad) => {
-              const active = activePads.has(pad.id);
-              const pulsing = padPulse.has(pad.id);
+              const active = activePads.has(pad.id)
+              const pulsing = padPulse.has(pad.id)
               return (
                 <button
                   key={pad.id}
@@ -339,7 +353,7 @@ export default function App() {
                   <span style={{ fontSize: 20, fontWeight: "bold" }}>{pad.icon}</span>
                   <span style={{ fontSize: 10, letterSpacing: 2, fontWeight: "bold" }}>{pad.label}</span>
                 </button>
-              );
+              )
             })}
           </div>
         </section>
@@ -367,7 +381,7 @@ export default function App() {
         {/* PLAY BUTTON + MAGIC */}
         <section style={{ display: "flex", gap: 12 }}>
           <button
-            onClick={() => setIsPlaying((p) => !p)}
+            onClick={handlePlay}
             data-testid="play-button"
             style={{
               flex: 2,
@@ -423,7 +437,9 @@ export default function App() {
             paddingBottom: 8,
           }}
         >
-          {currentMood?.label} · {activePads.size} SOUNDS · {bpm} BPM {isPlaying ? " · ● LIVE" : ""}
+          {currentMood?.label} · {activePads.size} SOUNDS · {bpm} BPM{" "}
+          {isPlaying ? " · ● LIVE" : ""}
+          {!audioStarted && isPlaying ? " · tap pads to hear" : ""}
         </div>
       </main>
 
@@ -443,5 +459,5 @@ export default function App() {
         button { outline: none; }
       `}</style>
     </div>
-  );
+  )
 }
