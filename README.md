@@ -23,8 +23,25 @@ npm run dev
 # Production build
 npm run build
 
-# Vercel deploy
+## Deploy to Vercel
+
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Login (opens browser)
+vercel login
+
+# Deploy from vibe directory
+cd /home/dobby/.openclaw/workspace/vibe
 vercel --prod
+```
+
+Or connect the GitHub repo to Vercel for automatic deploys:
+```
+https://github.com/KrabbiAI/vibe-app
+```
+Enable the Vercel GitHub App on the repo for zero-config deployments.
 ```
 
 ## Tech Stack
