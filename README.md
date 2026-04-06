@@ -1,123 +1,93 @@
-# 🎵 VIBE — Musik ohne Noten
+# Vibe — Web Audio Synth Pad
 
-Mood-based music creation. Keine Akkorde, kein BPM — nur Farben und Gefühl.
+**Browser-based audio synthesizer with 6 mood presets and 6 interactive synth pads.**
 
-**Live:** https://candid-begonia-1e5b20.netlify.app
+**Live:** https://vibe-xyz.vercel.app
 
-## ✨ Features
+## What It Does
 
-- 🎛 **6 Moods** — Warm, Electric, Dreamy, Dark, Forest, Fire (jedes mit eigenem Farbschema + Akkord-Progression)
-- 🥁 **6 Sound-Pads** — KICK, SNARE, BASS, CHORD, LEAD, FX (toggle an/aus) — **echte Tone.js Synths**
-- 🎚 **Energie-Slider** — 😴 Chill (60 BPM) bis 🤯 Banger (160 BPM) — steuert auch Filter + Reverb
-- ▶️ **PLAY/STOP** — 8-Step Beat-Visualizer mit echtem Sequencer
-- 🎲 **REMIX** — alles zufällig neu mischen
-- Ripple-Effekte, Ambient Glow, Puls-Animationen
-- **Echter Sound** — MembraneSynth (Kick), NoiseSynth (Snare), FMSynth/AMSynth (Chord/Lead/Bass), MetalSynth (FX)
+Web Audio API-powered synth pad. Six mood presets change background visuals + audio characteristics. Six pads (Kick, Snare, Bass, Chord, Lead, FX) trigger procedurally generated sounds. Real-time waveform visualization via Canvas.
 
-## 🛠 Tech Stack
-
-| Layer | Tech |
-|-------|------|
-| Framework | React 19 + Vite (TypeScript) |
-| Audio | Tone.js v15 (MembraneSynth, NoiseSynth, FMSynth, AMSynth, MetalSynth) |
-| Animation | Framer Motion |
-| State | Zustand |
-| Styling | Inline Styles |
-| Tests | Vitest + Testing Library (11 tests) |
-| Hosting | Netlify (auto-deploy on push) |
-
-## 🚀 Setup
+## Restore from Scratch
 
 ```bash
-# Clone
-git clone https://github.com/KrabbiAI/vibe-app.git
-cd vibe-app
+# Requires: Node.js 18+
+cd /home/dobby/.openclaw/workspace/vibe
 
 # Install dependencies
 npm install
 
-# Install additional deps (Tone.js, Framer Motion, Zustand, Vitest)
-npm install tone framer-motion zustand
-npm install -D vitest @testing-library/react @testing-library/user-event @testing-library/jest-dom jsdom
-
-# Run tests
-npm test
-
-# Run dev server
+# Development
 npm run dev
 
-# Build for production
+# Production build
 npm run build
+
+# Vercel deploy
+vercel --prod
 ```
 
-## 🧪 Tests
+## Tech Stack
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| react | ^19.x | UI |
+| typescript | ~5.9 | Type safety |
+| vite | ^8.0.1 | Build tool |
+| tailwindcss | ^4.2.2 | Styling |
+
+Note: No external audio libraries — all sound generated via Web Audio API.
+
+## Moods
+
+| Mood | Emoji | Color | Vibe |
+|------|-------|-------|------|
+| Warm | ☀️ | Orange/Gold | Summer, Euphoria |
+| Electric | ⚡ | Cyan/Blue | Energy, Club |
+| Dreamy | 🌙 | Purple | Deep, Träumerisch |
+| Dark | 🌑 | Dark Violet | Intense, Drama |
+| Forest | 🌿 | Green | Relaxed, Nature |
+| Fire | 🔥 | Red/Orange | Anger, Power |
+
+## Pads
+
+| Pad | Icon | Sound Type |
+|-----|------|------------|
+| KICK | ● | Low frequency sine + envelope |
+| SNARE | ◆ | White noise + bandpass |
+| BASS | ▼ | Sawtooth + lowpass |
+| CHORD | ■ | Stacked oscillators |
+| LEAD | ★ | Detuned saws |
+| FX | ◉ | Filtered noise sweep |
+
+## Project Structure
+
+```
+vibe/src/
+├── App.tsx              # Main UI, mood/pad state
+├── useAudioEngine.ts    # Web Audio synthesis engine
+├── sampleGenerator.ts   # Procedural sound functions
+├── App.css              # Visual styles
+└── App.test.tsx         # Tests
+```
+
+## Key Implementation Notes
+
+- All audio is **procedurally generated** — no audio files
+- Web Audio API context created on first user interaction (browser policy)
+- Each mood changes: background gradient, oscillator frequencies, filter cutoff, reverb
+- Canvas waveform visualizer uses `AnalyserNode.getByteTimeDomainData()`
+- Touch events supported via `onTouchStart` + `onTouchEnd`
+
+## Controls
+
+- **Click/Tap pad** — Trigger sound
+- **Click mood button** — Switch mood (instant visual + audio change)
+- **Hold pad** — Sustained sound with envelope
+
+## Verify Installation
 
 ```bash
-npm test        # Run all tests (15 tests)
-npm run test:watch  # Watch mode
+npm run build  # Must succeed without errors
+npm run lint   # No TypeScript/lint errors
 ```
-
-**Test Coverage:**
-- Mood button rendering (all 6)
-- Pad rendering (all 6)
-- Energy slider → BPM conversion
-- Play/Stop toggle
-- Beat visualizer
-- Remix button
-- Status bar updates
-
-## 🌐 Deployment
-
-**Auto-Deploy (Netlify):**
-Push to `main` → Netlify baut und deployt automatisch.
-
-**Manual:**
-```bash
-npm run build
-netlify deploy --prod --dir=dist
-```
-
-## 📁 Project Structure
-
-```
-vibe-app/
-├── src/
-│   ├── App.tsx          # Main component (all UI)
-│   ├── App.css         # Minimal reset
-│   ├── App.test.tsx    # Vitest tests
-│   ├── setupTests.ts   # Testing Library setup
-│   ├── main.tsx        # Entry point
-│   └── index.css       # Global styles
-├── public/             # Static assets
-├── vite.config.ts      # Vite config
-├── vitest.config.ts    # Test config
-├── package.json
-└── tsconfig.json
-```
-
-## 🎛 Moods & Colors
-
-| Mood | Color | Vibe |
-|------|-------|------|
-| ☀️ Warm | `#FFB347` | Sommer, Euphorie |
-| ⚡ Electric | `#7DF9FF` | Energie, Club |
-| 🌙 Dreamy | `#B39DDB` | Tief, Träumerisch |
-| 🌑 Dark | `#2D2D3A` | Intensiv, Drama |
-| 🌿 Forest | `#52B788` | Entspannt, Natur |
-| 🔥 Fire | `#FF4500` | Wut, Power |
-
-## ⚠️ Known Limitations
-
-- URL State für Share-Funktion ist noch nicht implementiert
-- Mobile Touch-Events können bei Sound-Pads verzögern (geplant: Touch-optimierte Pads)
-
-## 🔮 Next Steps
-
-1. ~~Tone.js Audio-Engine integrieren~~ ✅ done
-2. URL-encoded State für Share-Links
-3. Aufnahme-Funktion (导出 als WAV/MP3)
-4. Mobile-optimierte Touch-Gesten
-
----
-
-*Built by Krabbi 🦀 — React + Vite + Framer Motion + Tone.js*
