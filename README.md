@@ -22,6 +22,7 @@ npm run dev
 
 # Production build
 npm run build
+```
 
 ## Deploy to Vercel
 
