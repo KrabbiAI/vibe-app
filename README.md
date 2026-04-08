@@ -3,47 +3,11 @@
 **Browser-based audio synthesizer with 6 mood presets and 6 interactive synth pads.**
 
 **Live:** https://vibe-xyz.vercel.app
+**GitHub:** https://github.com/KrabbiAI/vibe-app
 
-## What It Does
+## Was Es Macht
 
-Web Audio API-powered synth pad. Six mood presets change background visuals + audio characteristics. Six pads (Kick, Snare, Bass, Chord, Lead, FX) trigger procedurally generated sounds. Real-time waveform visualization via Canvas.
-
-## Restore from Scratch
-
-```bash
-# Requires: Node.js 18+
-cd /home/dobby/.openclaw/workspace/vibe
-
-# Install dependencies
-npm install
-
-# Development
-npm run dev
-
-# Production build
-npm run build
-```
-
-## Deploy to Vercel
-
-```bash
-# Install Vercel CLI
-npm install -g vercel
-
-# Login (opens browser)
-vercel login
-
-# Deploy from vibe directory
-cd /home/dobby/.openclaw/workspace/vibe
-vercel --prod
-```
-
-Or connect the GitHub repo to Vercel for automatic deploys:
-```
-https://github.com/KrabbiAI/vibe-app
-```
-Enable the Vercel GitHub App on the repo for zero-config deployments.
-```
+Web Audio API-powered synth pad. Six mood presets ändern background visuals + audio characteristics. Six pads (Kick, Snare, Bass, Chord, Lead, FX) trigger procedurally generated sounds. Real-time waveform visualization via Canvas.
 
 ## Tech Stack
 
@@ -54,7 +18,55 @@ Enable the Vercel GitHub App on the repo for zero-config deployments.
 | vite | ^8.0.1 | Build tool |
 | tailwindcss | ^4.2.2 | Styling |
 
-Note: No external audio libraries — all sound generated via Web Audio API.
+**Note:** No external audio libraries — all sound generated via Web Audio API.
+
+## Restore from Scratch
+
+### 1. System Requirements
+
+```bash
+node --version  # must be >= 18
+npm --version
+```
+
+### 2. Dependencies
+
+```bash
+cd /home/dobby/.openclaw/workspace/vibe
+npm install
+```
+
+### 3. Environment Variables
+
+Keine Environment Variables benötigt.
+
+## Local Development
+
+```bash
+cd /home/dobby/.openclaw/workspace/vibe
+npm run dev      # Dev server auf localhost:5173
+npm run build    # Production build
+npm run preview # Preview production build
+```
+
+## Deploy to Vercel
+
+```bash
+# Vercel CLI
+npm install -g vercel
+
+# Login (opens browser)
+vercel login
+
+# Deploy
+cd /home/dobby/.openclaw/workspace/vibe
+vercel --prod
+```
+
+**Oder:** GitHub repo mit Vercel verbinden für automatic deploys:
+```
+https://github.com/KrabbiAI/vibe-app
+```
 
 ## Moods
 
@@ -78,7 +90,35 @@ Note: No external audio libraries — all sound generated via Web Audio API.
 | LEAD | ★ | Detuned saws |
 | FX | ◉ | Filtered noise sweep |
 
-## Project Structure
+## Audio Implementation
+
+**All audio is procedurally generated** — no audio files.
+
+**Web Audio API Context Creation:**
+- AudioContext wird bei first user interaction erstellt (Browser policy)
+- Kein vor-laden von Sounds möglich
+
+**Pro Pad (Kick, Snare, etc.):**
+1. OscillatorNode oder AudioBufferSourceNode erstellen
+2. GainNode für envelope (attack, decay, sustain, release)
+3. BiquadFilterNode für tone shaping
+4. AnalyserNode für visualization
+
+**Mood ändert:**
+- Background gradient
+- Oscillator frequencies
+- Filter cutoff
+- Reverb/delay settings
+
+## Controls
+
+| Action | Keyboard | Touch |
+|--------|----------|-------|
+| Trigger pad | Click | Tap |
+| Switch mood | Click mood button | Tap mood button |
+| Hold sound | Hold pad | Hold tap |
+
+## Projekt Struktur
 
 ```
 vibe/src/
@@ -89,23 +129,34 @@ vibe/src/
 └── App.test.tsx         # Tests
 ```
 
-## Key Implementation Notes
+## Canvas Waveform Visualizer
 
-- All audio is **procedurally generated** — no audio files
-- Web Audio API context created on first user interaction (browser policy)
-- Each mood changes: background gradient, oscillator frequencies, filter cutoff, reverb
-- Canvas waveform visualizer uses `AnalyserNode.getByteTimeDomainData()`
-- Touch events supported via `onTouchStart` + `onTouchEnd`
+- `AnalyserNode.getByteTimeDomainData()` für waveform data
+- 60fps render loop via `requestAnimationFrame`
+- Canvas 2D context für rendering
 
-## Controls
+## Troubleshooting
 
-- **Click/Tap pad** — Trigger sound
-- **Click mood button** — Switch mood (instant visual + audio change)
-- **Hold pad** — Sustained sound with envelope
+**Kein Sound auf Mobile:**
+- Browser policy erfordert user interaction vor audio
+- Erster tap auf pad startet AudioContext
+- Safe area contexts für iOS notch beachten
+
+**Sound funktioniert nur einmal:**
+- AudioContext.resume() prüfen
+- Eventuellen browser tab mute check
+
+**Performance Probleme:**
+- Viele sounds gleichzeitig → Reduce oscillator count
+- Mobile → simpler waveforms nutzen
 
 ## Verify Installation
 
 ```bash
-npm run build  # Must succeed without errors
-npm run lint   # No TypeScript/lint errors
+npm run build  # Muss ohne errors durchlaufen
+npm run lint   # Keine TypeScript/lint errors
 ```
+
+## API Endpoints
+
+Keine Backend API — reines frontend.
